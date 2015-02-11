@@ -1,10 +1,11 @@
-#version 400
+#version 150
 
-smooth in vec4 vertColour;
 
-out vec4 outputColour;
+
+
+out vec4 outColor;
 
 void main()
 {
-	outputColour = vertColour;
+	outColor = vec4(1.0, 1.0, 1.0, 1.0);
 }
