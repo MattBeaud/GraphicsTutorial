@@ -11,11 +11,21 @@
 #include <iostream>
 
 
+//Shader Sources BRUH
+const GLchar* vertexSource =
+"#version 330\n"
+"in vec2 position;"
+"void main() {"
+"	gl_Position = vec4(position, 0.0, 1.0);"
+"}";
 
-
-
-
-
+const GLchar* fragmentSource =
+"#version 330\n"
+"uniform vec3 triangleColor;"
+"out vec4 outColor;"
+"void main() {"
+"	outColor = vec4(triangleColor, 1.0);"
+"}";
 
 GLuint CreateShader(GLenum a_eShaderType, const char *a_strShaderFile)
 {
@@ -38,11 +48,13 @@ GLuint CreateShader(GLenum a_eShaderType, const char *a_strShaderFile)
 
 	//create shader ID
 	GLuint uiShader = glCreateShader(a_eShaderType);
+	
 	//load source code
 	glShaderSource(uiShader, 1, &szShaderSourcePointer, NULL);
-
+	
 	//compile shader
 	glCompileShader(uiShader);
+	
 
 	//Check for compiliation errors and output them
 	GLint iStatus;
@@ -68,7 +80,6 @@ GLuint CreateShader(GLenum a_eShaderType, const char *a_strShaderFile)
 
 	return uiShader;
 }
-
 GLuint CreateProgram(const char *a_vertex, const char *a_frag)
 {
 	std::vector<GLuint> shaderList;
@@ -109,69 +120,6 @@ GLuint CreateProgram(const char *a_vertex, const char *a_frag)
 
 	return uiProgram;
 }
-float* getOrtho(float left, float right, float bottom, float top, float a_fNear, float a_fFar)
-{
-	float* toReturn = new float[12];
-	toReturn[0] = 2.0 / (right - left);;
-	toReturn[1] = toReturn[2] = toReturn[3] = toReturn[4] = 0;
-	toReturn[5] = 2.0 / (top - bottom);
-	toReturn[6] = toReturn[7] = toReturn[8] = toReturn[9] = 0;
-	toReturn[10] = 2.0 / (a_fFar - a_fNear);
-	toReturn[11] = 0;
-	toReturn[12] = -1 * ((right + left) / (right - left));
-	toReturn[13] = -1 * ((top + bottom) / (top - bottom));
-	toReturn[14] = -1 * ((a_fFar + a_fNear) / (a_fFar - a_fNear));
-	toReturn[15] = 1 ;
-	return toReturn;
-}
-
-const float vertexPositions[] =
-{
-	1024 / 2.0, 720 / 2.0 + 10.0f, 0.0f, 1.0f,
-	1024 / 2.0 - 5.0f, 720 / 2.0 - 10.0f, 0.0f, 1.0f,
-	1024 / 2.0 + 5.0f, 720 / 2.0 - 10.0f, 0.0f, 1.0f,
-
-};
-
-const float vertexColours[] =
-{
-	1.0f, 0.0f, 0.0f, 1.0f,
-	0.0f, 1.0f, 0.0f, 1.0f,
-	0.0f, 0.0f, 1.0f, 1.0f,
-
-};
-
-unsigned int loadTexture(const char* a_pFilename, int & a_iWidth, int & a_iHeight, int & a_iBPP)
-{
-	unsigned int uiTextureID = 0;
-	//check file existence
-	if (a_pFilename != nullptr)
-	{
-		//read in image data from file
-		unsigned char* pImageData = SOIL_load_image(a_pFilename, &a_iWidth, &a_iHeight, &a_iBPP, SOIL_LOAD_AUTO);
-
-		//check for successful read
-		if (pImageData)
-		{
-			//create opengl texture handle
-			uiTextureID = SOIL_create_OGL_texture(pImageData, a_iWidth, a_iHeight, a_iBPP,
-				SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB | SOIL_FLAG_COMPRESS_TO_DXT);
-			//clear what was read in from file now that it is stored in the handle
-			SOIL_free_image_data(pImageData);
-
-		}
-		//Check for errors
-
-		if (uiTextureID == 0)
-		{
-			std::cerr << "SOIL loading error: " << SOIL_last_result() << std::endl;
-		}
-		return uiTextureID;
-
-
-
-	}
-};
 
 float vertices[] =
 {
@@ -181,10 +129,6 @@ float vertices[] =
 };
 
 
-
-
-
-
 int main()
 {
 	//Initilization of GLFW
@@ -192,8 +136,6 @@ int main()
 	{
 		return -1;
 	}
-
-
 
 	//create a windowed mode winow and it's OpenGL context
 	GLFWwindow* window;
@@ -208,9 +150,6 @@ int main()
 	//make the window's context current
 	glfwMakeContextCurrent(window);
 
-
-
-
 	//.............................................................................
 	//START GLEW BRUH
 	if (glewInit() != GLEW_OK)
@@ -221,20 +160,94 @@ int main()
 	}
 	//..............................................................................
 	//looooppppooop unitl user closes windooe
-
+	GLuint vao;
+	glGenVertexArrays(1, &vao);
+	//Start using by bindiing;sehti
+	glBindVertexArray(vao);
 
 	GLuint vbo;
 	glGenBuffers(1, &vbo); // Generate 1 buffer
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
+	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(vertexShader, 1, &vertexSource, NULL);
+	glCompileShader(vertexShader);
+
+	GLint status;
+	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &status);
+
+	if (status == GL_TRUE)
+	{
+		printf("Vertex shader compiled successfully bruh\n");
+		printf("I furted\n");
+	}
+
+	char buffer[512];
+	glGetShaderInfoLog(vertexShader, 512, NULL, buffer);
+
+	printf(buffer);
+
+	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(fragmentShader, 1, &fragmentSource, NULL);
+	glCompileShader(fragmentShader);
+
+	GLint SHIT;
+	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &SHIT);
+
+	if (SHIT == GL_TRUE)
+	{
+		printf("SHIT IS TRUE BITCH\n");
+	}
+	else if (SHIT == GL_FALSE)
+	{
+		printf("SHIT AINT REAL BRUH\n");
+
+	}
+
+	GLuint shaderProgram = glCreateProgram();
+	glAttachShader(shaderProgram, vertexShader);
+	glAttachShader(shaderProgram, fragmentShader);
+
+	//glBindFragDataLocation(shaderProgram, 0, "outColor");
+	//Linksshit
+	glLinkProgram(shaderProgram);
+	//start using shit
+	glUseProgram(shaderProgram);
+	
+	GLint statusProgram;
+	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &statusProgram);
+	if (statusProgram == GL_FALSE)
+	{
+		GLint infoLogLength;
+		glGetProgramiv(shaderProgram, GL_INFO_LOG_LENGTH, &infoLogLength);
+
+		GLchar *strInfoLog = new GLchar[infoLogLength + 1];
+		glGetProgramInfoLog(shaderProgram, infoLogLength, NULL, strInfoLog);
+
+		fprintf(stderr, "Linker failure: %s\n", strInfoLog);
+		delete[] strInfoLog;
+	}
+
+	//time to link mofer shitea
+	//Retrieving Postion
+	GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
+
+	glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(posAttrib);
+
+	GLint uniColor = glGetUniformLocation(shaderProgram, "triangleColor");
+
+
 
 
 	while (!glfwWindowShouldClose(window))
 	{
 		//draw code goes here
-		glClearColor(1.0f, 1.0f, 0.3f, 0.0f);
+		glClearColor(0.1f, 0.3f, 0.3f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
+
+		glDrawArrays(GL_TRIANGLES, 0, 3);
 
 		//swap front and back buffers
 		glfwSwapBuffers(window);
@@ -242,14 +255,6 @@ int main()
 		//poll for and process events
 		glfwPollEvents();
 	}
-
-
-
-
-
-
-
-
 
 	glfwTerminate();
 	return 0;
